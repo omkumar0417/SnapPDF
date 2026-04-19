@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnapPDF — Screenshots to PDF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- SESSION RESTORE BANNER -->
+  <div id="restore-banner" class="restore-banner hidden">
+    <div class="restore-content">
+      <span class="restore-icon">⚡</span>
+      <div class="restore-text">
+        <strong>Session found</strong>
+        <span id="restore-count">0 images from your last session</span>
+      </div>
+      <div class="restore-actions">
+        <button id="btn-restore" class="btn btn-accent">Restore</button>
+        <button id="btn-discard" class="btn btn-ghost">Discard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo">
+        <span class="logo-mark">S</span>
+        <span class="logo-text">SnapPDF</span>
+      </div>
+      <div class="page-counter">
+        <span id="page-count">0</span>
+        <span class="page-label">pages</span>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="project-name-wrap">
+        <input type="text" id="project-name" class="project-name-input" value="My PDF Project" spellcheck="false" />
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-icon" id="btn-undo" title="Undo (Ctrl+Z)" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
+      </button>
+      <button class="btn btn-icon" id="btn-redo" title="Redo (Ctrl+Y)" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/></svg>
+      </button>
+      <div class="divider-v"></div>
+      <button class="btn btn-icon" id="btn-theme" title="Toggle dark/light mode">
+        <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <svg class="icon-sun hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button class="btn btn-danger-ghost" id="btn-clear-all" title="Clear all images">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        Clear All
+      </button>
+      <button class="btn btn-primary" id="btn-generate-pdf">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Export PDF
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <div class="app-body">
+
+    <!-- LEFT SIDEBAR: THUMBNAILS -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">Pages</span>
+        <button class="btn btn-icon btn-sm" id="btn-collapse-sidebar" title="Collapse sidebar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
+
+      <!-- UPLOAD ZONE -->
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="file-input" accept="image/*" multiple class="file-input-hidden" />
+        <div class="upload-zone-inner" id="upload-zone-inner">
+          <div class="upload-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+          </div>
+          <p class="upload-label">Drop images here</p>
+          <span class="upload-sub">or <button class="btn-link" id="btn-pick-files">browse files</button></span>
+          <span class="upload-formats">PNG · JPG · WEBP · GIF</span>
+        </div>
+      </div>
+
+      <!-- THUMBNAIL LIST -->
+      <div class="thumbnail-list" id="thumbnail-list">
+        <!-- thumbnails injected by JS -->
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-ghost btn-sm btn-full" id="btn-export-json">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Project
+        </button>
+        <label class="btn btn-ghost btn-sm btn-full" for="import-json-input">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import Project
+        </label>
+        <input type="file" id="import-json-input" accept=".json" class="file-input-hidden" />
+      </div>
+    </aside>
+
+    <!-- COLLAPSED SIDEBAR TOGGLE -->
+    <button class="sidebar-expand-btn hidden" id="btn-expand-sidebar" title="Expand sidebar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <!-- CENTER: MAIN PREVIEW -->
+    <main class="main-panel" id="main-panel">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-graphic">
+          <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+            <rect x="10" y="18" width="44" height="52" rx="4" fill="var(--surface-2)" stroke="var(--border)" stroke-width="1.5"/>
+            <rect x="18" y="10" width="44" height="52" rx="4" fill="var(--surface-3)" stroke="var(--border)" stroke-width="1.5"/>
+            <rect x="26" y="2" width="44" height="52" rx="4" fill="var(--surface-4)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 2"/>
+            <path d="M43 20v16M35 28h16" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h2 class="empty-title">No screenshots yet</h2>
+        <p class="empty-sub">Upload your first image using the sidebar,<br/>or drag & drop anywhere on this window.</p>
+        <button class="btn btn-accent btn-lg" id="btn-empty-pick">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Screenshots
+        </button>
+      </div>
+
+      <!-- IMAGE PREVIEW PANEL -->
+      <div class="preview-panel hidden" id="preview-panel">
+        <div class="preview-toolbar">
+          <div class="preview-nav">
+            <button class="btn btn-icon btn-sm" id="btn-prev-page">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span class="preview-page-indicator">
+              <input type="number" id="preview-page-input" min="1" value="1" class="page-jump-input" />
+              <span id="preview-page-total">/ 1</span>
+            </span>
+            <button class="btn btn-icon btn-sm" id="btn-next-page">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+          <div class="preview-tools">
+            <button class="btn btn-icon btn-sm" id="btn-rotate-ccw" title="Rotate CCW (R)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
+            </button>
+            <button class="btn btn-icon btn-sm" id="btn-rotate-cw" title="Rotate CW (Shift+R)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/></svg>
+            </button>
+            <button class="btn btn-icon btn-sm" id="btn-flip-h" title="Flip Horizontal">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><polyline points="7 8 2 12 7 16"/><polyline points="17 8 22 12 17 16"/></svg>
+            </button>
+            <button class="btn btn-icon btn-sm" id="btn-flip-v" title="Flip Vertical">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="8 7 12 2 16 7"/><polyline points="8 17 12 22 16 17"/></svg>
+            </button>
+            <button class="btn btn-icon btn-sm" id="btn-crop-black" title="Auto-crop black borders">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 2 2"/><polyline points="6 9 2 9"/><polyline points="18 9 22 9"/><polyline points="18 9 18 2 22 2"/><polyline points="6 15 2 15"/><polyline points="6 15 6 22 2 22"/><polyline points="18 15 22 15"/><polyline points="18 15 18 22 22 22"/></svg>
+            </button>
+            <div class="divider-v"></div>
+            <button class="btn btn-icon btn-sm" id="btn-zoom-out" title="Zoom out (-)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <span class="zoom-level" id="zoom-level">100%</span>
+            <button class="btn btn-icon btn-sm" id="btn-zoom-in" title="Zoom in (+)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <button class="btn btn-icon btn-sm" id="btn-zoom-fit" title="Fit to window">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="preview-canvas-wrap" id="preview-canvas-wrap">
+          <div class="preview-canvas" id="preview-canvas">
+            <img id="preview-img" src="" alt="Preview" draggable="false" />
+          </div>
+        </div>
+        <div class="preview-info-bar">
+          <span id="preview-img-info" class="img-info-text"></span>
+          <div class="preview-position-controls">
+            <button class="btn btn-icon btn-sm" id="btn-move-top" title="Move to top">⇤</button>
+            <button class="btn btn-icon btn-sm" id="btn-move-up" title="Move up">↑</button>
+            <button class="btn btn-icon btn-sm" id="btn-move-down" title="Move down">↓</button>
+            <button class="btn btn-icon btn-sm" id="btn-move-bottom" title="Move to bottom">⇥</button>
+            <div class="divider-v"></div>
+            <button class="btn btn-danger-ghost btn-sm" id="btn-delete-current">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT PANEL: PDF SETTINGS -->
+    <aside class="settings-panel" id="settings-panel">
+      <div class="settings-header">
+        <span class="settings-title">PDF Settings</span>
+      </div>
+
+      <div class="settings-body">
+
+        <div class="setting-group">
+          <label class="setting-label">File Name</label>
+          <input type="text" id="pdf-filename" class="setting-input" value="screenshots" placeholder="my-document" />
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">Page Size</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" data-val="a4" id="size-a4">A4</button>
+            <button class="toggle-btn" data-val="letter" id="size-letter">Letter</button>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">Orientation</label>
+          <div class="toggle-group">
+            <button class="toggle-btn" data-val="landscape" id="orient-landscape">
+              <svg width="12" height="12" viewBox="0 0 20 14" fill="currentColor"><rect x="0" y="0" width="20" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+              Landscape
+            </button>
+            <button class="toggle-btn" data-val="portrait" id="orient-portrait">
+              <svg width="10" height="14" viewBox="0 0 14 20" fill="currentColor"><rect x="0" y="0" width="14" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+              Portrait
+            </button>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">Fit Mode</label>
+          <select class="setting-select" id="fit-mode">
+            <option value="fit-page">Fit to Full Page</option>
+            <option value="fit-width">Fit to Width</option>
+            <option value="original">Original Size</option>
+          </select>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">Margins (mm)</label>
+          <div class="margin-grid">
+            <div></div>
+            <input type="number" id="margin-top" class="setting-input margin-input" value="10" min="0" max="50" placeholder="T" title="Top" />
+            <div></div>
+            <input type="number" id="margin-left" class="setting-input margin-input" value="10" min="0" max="50" placeholder="L" title="Left" />
+            <div class="margin-center-dot"></div>
+            <input type="number" id="margin-right" class="setting-input margin-input" value="10" min="0" max="50" placeholder="R" title="Right" />
+            <div></div>
+            <input type="number" id="margin-bottom" class="setting-input margin-input" value="10" min="0" max="50" placeholder="B" title="Bottom" />
+            <div></div>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-row">
+            <label class="setting-label">Page Numbers</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-page-numbers" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="setting-group" id="group-header-footer">
+          <div class="setting-row">
+            <label class="setting-label">Header / Footer</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-header-footer" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="hf-fields hidden" id="hf-fields">
+            <input type="text" id="header-text" class="setting-input" placeholder="Header text..." />
+            <input type="text" id="footer-text" class="setting-input" placeholder="Footer text..." />
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-row">
+            <label class="setting-label">Compress Images</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-compress" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="compress-quality-wrap">
+            <label class="setting-sublabel">Quality: <span id="quality-val">80</span>%</label>
+            <input type="range" id="compress-quality" min="30" max="100" value="80" class="range-input" />
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">Pages to Include</label>
+          <input type="text" id="page-range" class="setting-input" placeholder="e.g. 1-5, 8, 10-12 (blank = all)" />
+        </div>
+
+      </div>
+
+      <div class="settings-footer">
+        <div id="generate-progress" class="generate-progress hidden">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+          </div>
+          <span class="progress-label" id="progress-label">Generating…</span>
+        </div>
+        <button class="btn btn-primary btn-full btn-lg" id="btn-generate-pdf-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Generate PDF
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- CONFIRM MODAL -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal">
+      <h3 class="modal-title" id="modal-title">Confirm</h3>
+      <p class="modal-body" id="modal-body">Are you sure?</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modal-cancel">Cancel</button>
+        <button class="btn btn-danger" id="modal-confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRAG OVERLAY -->
+  <div class="drag-overlay hidden" id="drag-overlay">
+    <div class="drag-overlay-inner">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+      <p>Drop images to add</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="db.js"></script>
+  <script src="imageProcessor.js"></script>
+  <script src="pdfGenerator.js"></script>
+  <script src="ui.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
